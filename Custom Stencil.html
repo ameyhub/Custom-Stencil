@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <style>
+      * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      }
+
+      input {
+        outline: none;
+
+        border: none;
+      }
+
+      .multi-selector {
+        width: max-content;
+      }
+
+      .select-field {
+        border: 1px solid rgb(187, 187, 187);
+      }
+
+      .select-field,
+      .task,
+      .listtt {
+        width: 100%;
+
+        background-color: white;
+
+        padding: 0.3rem;
+      }
+
+      .listtt {
+        box-shadow: 0 30px 60px rgb(0, 0, 0, 0.2);
+
+        display: none;
+      }
+
+      .down-arrow {
+        font-size: 1.2rem;
+
+        display: inline-block;
+
+        cursor: pointer;
+
+        transition: 0.2s linear;
+      }
+
+      .task {
+        display: block;
+
+        padding-left: 0;
+      }
+
+      .task span {
+        float: right;
+
+        font-size: 0.6rem;
+
+        padding-top: 6px;
+      }
+
+      .task:hover {
+        background-color: aliceblue;
+      }
+
+      .show {
+        display: block;
+      }
+
+      .rotate180 {
+        transform: rotate(-60deg);
+      }
+
+      #myList {
+        list-style-type: None;
+
+        display: inline-block;
+
+        margin-left: 0;
+
+        padding-left: 0;
+      }
+
+      #myList li {
+        display: inline-block;
+
+        border: 1px solid red;
+
+        background-color: pink;
+
+        border-radius: 5px;
+
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="multi-selector">
+      <div class="select-field">
+        <input
+          type="text"
+          name=""
+          placeholder="Choose tasks"
+          id="selectTask"
+          class="input-selector"
+        />
+
+        <span class="down-arrow">&blacktriangledown;</span>
+      </div>
+
+      <div class="listtt"></div>
+
+      <ul id="myList"></ul>
+    </div>
+
+    <script>
+      var list = document.querySelector(".listtt");
+
+      var explore = document.querySelector(".input-selector");
+
+      document.querySelector(".down-arrow").addEventListener("click", () => {
+        document.querySelector(".listtt").classList.toggle("show");
+
+        document.querySelector(".down-arrow").classList.toggle("rotate180");
+
+        console.log("checkondown");
+      });
+
+      var data = [];
+
+      var typeahead;
+
+      async function fetchData() {
+        await fetch("https://restcountries.com/v3.1/all")
+          .then((response) => response.json())
+
+          .then((dataRead) => {
+            data = [];
+
+            dataRead.map((x) => {
+              data.push({
+                name: x.name.common,
+
+                value: false,
+              });
+            });
+
+            console.log(data);
+
+            loadList(data);
+          });
+      }
+
+      fetchData();
+
+      window.addEventListener("DOMContentLoaded", fetchData);
+
+      explore.addEventListener("input", filter);
+
+      var fields = [];
+
+      function onCheck(event) {
+        let onCheckEvent = data.find((item) => item.name == event.target.id);
+
+        onCheckEvent.value = event.target.checked;
+
+        if (event.target.checked) {
+          fields.push(onCheckEvent);
+        } else {
+          for (var i = 0; i < fields.length; i++) {
+            if (fields[i].name === event.target.id) {
+              fields.splice(i, 1);
+
+              i--;
+            }
+          }
+        }
+
+        console.log(onCheckEvent);
+
+        //fields.push(onCheckEvent)
+
+        console.log(fields);
+
+        document.getElementById("myList").innerHTML = "";
+
+        for (let a of fields) {
+          let node = document.createElement("li");
+
+          let textnode = document.createTextNode(a.name.toString());
+
+          typeahead = textnode;
+
+          /// data save (typeahead)
+
+          console.log(typeahead);
+
+          node.appendChild(textnode);
+
+          document.getElementById("myList").appendChild(node);
+        }
+      }
+
+      function loadList() {
+        let temp = "";
+
+        data.forEach((item, i) => {
+          temp += `<label class="task"> <input type="checkbox" name="" id="${item.name}">${item.name} </label>`;
+        });
+
+        list.innerHTML = temp;
+
+        data.forEach((item, i) => {
+          let checkbox = document.getElementById(`${item.name}`);
+
+          checkbox.addEventListener("change", onCheck);
+        });
+      }
+
+      function filter(e) {
+        let temp = "";
+
+        const result = data.filter((item) =>
+          item.name.toLowerCase().includes(e.target.value.toLowerCase())
+        );
+
+        if (result.length > 0) {
+          result.forEach((item, i) => {
+            temp += `<label class="task"> <input type="checkbox" name="" id="${item.name}">${item.name} </label>`;
+          });
+        } else {
+          temp = " ";
+        }
+
+        list.innerHTML = temp;
+
+        data.forEach((item, i) => {
+          let checkbox = document.getElementById(`${item.name}`);
+
+          if (checkbox) {
+            checkbox.checked = item.value;
+
+            checkbox.addEventListener("change", onCheck);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
